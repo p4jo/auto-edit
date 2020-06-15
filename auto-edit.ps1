@@ -39,6 +39,9 @@ param(
     [switch] $install = $false
 
 )
+
+#Pre-stuff
+
 $yesAnswers = "y","Y","yes","Yes","ja",'j'
 
 $oldPath = Get-Location
