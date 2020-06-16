@@ -53,7 +53,7 @@ param(
 
 #Pre-stuff
 
-$yesAnswers = "y","yes","ja",'j','oui'
+$yesAnswers = "y","yes","ja",'j','oui','confirm'
 
 $oldLocation = Get-Location
 
@@ -80,6 +80,7 @@ while ($true) {
     }
     Write-Host "You have to install python (version 3) (including the packet manager pip (pip3)) first" -ForegroundColor DarkYellow
     Write-Host "Running 'python3' should redirect you to the Microsoft Store from where you can install it."
+    Read-Host
 }
 
 while (!(Test-Path $Loc)) {
@@ -200,7 +201,7 @@ if ($outPath -ne '') {
     $parameters =  " --output_file '$($outPath)' $($parameters)"
 }
 
-Invoke-Expression "python .\auto-editor.py $($path) $($parameters)"
+Invoke-Expression "python .\auto-editor.py '$($path)' $($parameters)"
 
 Write-Host "auto-editor finished. " -ForegroundColor Green -NoNewline
 Remove-Item 'in-progress'
