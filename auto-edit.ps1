@@ -18,19 +18,19 @@
 
 param(
     [Parameter(Mandatory=$true, HelpMessage='The path to the video or alternatively a YouTube link')]
-    #The path to the video or alternatively a YouTube link.
+    #The path to the video or alternatively a YouTube link. Mandatory argument.
     [string] $path = '',
 
     #The path of the output video. Aliases: o, out, out-path, out_path, outPath, output-file, output_file, outputFile
-    [Alias('o','out',"out-path","out_path", "output-file", "output_file", "outputFile")]
+    [Alias('o','out', "out-path","out_path", "output-file", "output_file", "outputFile")]
     [string] $outPath = '',
 
-    #Aliases: silent_speed,silentSpeed,silent-speed,f,s,fast_speed,fast-speed, fastSpeed
+    #Aliases: silent_speed, silentSpeed, silent-speed,f, s, fast_speed, fast-speed, fastSpeed
     [Alias("silent_speed","silentSpeed","silent-speed","f","s","fast_speed","fast-speed")]
     [decimal] $fastSpeed = 8,
     
-    #Aliases : video_speed, videoSpeed, video-speed, normal-speed, normal_speed, loud_speed, loud-speed, loudSpeed ,ls,n,ns
-    [Alias("video_speed","videoSpeed","video-speed", "normal-speed", "normal_speed", "loud_speed", "loud-speed", "loudSpeed" ,"ls","n","ns")]
+    #Aliases : video_speed, videoSpeed, video-speed, normal-speed, normal_speed, loud_speed, loud-speed, loudSpeed, ls, n, ns, v
+    [Alias("video_speed","videoSpeed","video-speed", "normal-speed", "normal_speed", "loud_speed", "loud-speed", "loudSpeed" ,"ls","n","ns","v")]
     [decimal] $normalSpeed = 1,
     
     #A string to be passed to auto-editor as parameter list. For example: '--loudness_threshold 0.7 --hardware_accel qsv'. Paths must be absolute. Aliases: p, param, params, par
@@ -53,23 +53,22 @@ param(
 
 #Pre-stuff
 
-$yesAnswers = "y","Y","yes","Yes","ja",'j'
+$yesAnswers = "y","yes","ja",'j','oui'
 
 $oldLocation = Get-Location
 
 if(Test-Path $path) {
-    $path = Resolve-Path $path
+    $path = Resolve-Path $path # This makes $path independent of location it was relative before
 }
 if($outPath -ne '' -and (Test-Path $outPath)) {
-    $outPath = Resolve-Path $outPath
+    $outPath = Resolve-Path $outPath # This makes $outPath independent of location it was relative before
 }
 
-
-if ($Loc -eq '') {
-    $Loc = Get-Location
-}
 if ($Loc.EndsWith('\')) {
-    $Loc = $Loc.Remove($Loc.Length-1)
+    $Loc = $Loc.Remove($Loc.Length-1) 
+}
+if ($Loc -eq '') {
+    $Loc = "."
 }
 
 #CHECK INSTALLATION 
@@ -80,14 +79,14 @@ while ($true) {
         break    
     }
     Write-Host "You have to install python (version 3) (including the packet manager pip (pip3)) first" -ForegroundColor DarkYellow
-    Write-Host "Running 'python3' should redirect you to the Microsoft Store from where you can install it"
+    Write-Host "Running 'python3' should redirect you to the Microsoft Store from where you can install it."
 }
 
 while (!(Test-Path $Loc)) {
     Write-Host "The specified location $($Loc) was not found. You can specify the correct location with -Loc. Alternatively, edit this script's beginning. We can also create this folder." -ForegroundColor DarkYellow
     if (!$install) {
         $answer = Read-Host "Create the folder $($Loc)\ ?"
-        if (!$yesAnswers.Contains($answer)) {
+        if (!($yesAnswers -contains $answer)) {
             Write-Host "You can always leave by (Ctrl-Break) or (Ctrl-C)" -ForegroundColor Red
             continue
         }
@@ -96,23 +95,23 @@ while (!(Test-Path $Loc)) {
     New-Item -Path $Loc -ItemType Directory >$null
 }
 
-$Loc = Resolve-Path $Loc
+$Loc = Resolve-Path $Loc # Location was not changed before this. This makes $Loc independent of location it was relative before
 $LocRep = $Loc + "\auto-editor"
 
 
-cd $Loc
+Set-Location $Loc  #############################
 
 while (!(Test-Path "$($LocRep)\auto-editor.py")) {
     Write-Host "The specified location $($Loc) did not contain auto-editor. You can specify the correct location with -Loc. Alternatively, edit this script's beginning. We can also try to download it." -ForegroundColor DarkYellow
     if (!$install) {
         $answer = Read-Host "Download auto-editor and dependencies? This requires git and python (v3) to be installed."
-        if (!$yesAnswers.Contains($answer)) {
+        if (!($yesAnswers -contains $answer)) {
             Write-Host "You can always leave by (Ctrl-Break) or (Ctrl-C)" -ForegroundColor Red
             continue
         }
     }
 
-    Write-Host "Red is not necessarily bad here:"
+    Write-Host "Red is not necessarily bad here:" -ForegroundColor Gray
     
     #HERE THE INSTALLING HAPPENS
     git clone 'https://github.com/WyattBlue/auto-editor.git'
@@ -122,7 +121,7 @@ while (!(Test-Path "$($LocRep)\ffmpeg.exe") -or !(Test-Path "$($LocRep)\ffprobe.
     Write-Host "The specified location $($LocRep) did not contain ffmpeg." -ForegroundColor DarkYellow
     if (!$install) {
         $answer = Read-Host "Please download ffmpeg from here: https://ffmpeg.zeranoe.com/builds/ into the default download folder. Start this webpage?"
-        if ($yesAnswers.Contains($answer)) {
+        if ($yesAnswers -contains $answer) {
             start https://ffmpeg.zeranoe.com/builds/
         }
         Read-Host "When finished, press enter"
@@ -130,7 +129,7 @@ while (!(Test-Path "$($LocRep)\ffmpeg.exe") -or !(Test-Path "$($LocRep)\ffprobe.
     if ((Test-Path "$($LocRep)\ffmpeg.exe") -and (Test-Path "$($LocRep)\ffprobe.exe")) {
         break
     }
-    Set-Location ~\Downloads
+    Set-Location ~\Downloads ############
     $ffmpegFiles = Get-Childitem –Path .\* -Include ffmpeg*.zip -File -Recurse
     if ($ffmpegFiles -eq $null) {
         Write-Host "No ffmpeg*.zip was found in Downloads." -ForegroundColor DarkYellow
@@ -147,7 +146,7 @@ while (!(Test-Path "$($LocRep)\ffmpeg.exe") -or !(Test-Path "$($LocRep)\ffprobe.
     #HERE FFMPEG IS EXTRACTED
     $ffmpegFolder = "$($LocRep)\ffmpegFolder\"
     Expand-Archive $ffmpegFile -DestinationPath $ffmpegFolder -Force
-    Set-Location $LocRep
+    Set-Location $LocRep ##################
     $ffmpegEXE = Get-Childitem -Filter ffmpeg*.exe -File -Recurse -Name
     Copy-Item $ffmpegEXE .\ -Force
     $ffmpegEXE = Get-Childitem -Filter ffprobe*.exe -File -Recurse -Name
@@ -163,7 +162,7 @@ for ($i=0; $i -le 100; $i++)
     {
         Write-Host "New folder $($LocRep)$($i)\ will be created and filled with a copy of auto-editor and ffmpeg."
         New-Item -Path "$($LocRep)$($i)" -ItemType Directory >$null
-        Set-Location $LocRep
+        Set-Location $LocRep ###############
         $folderStructure = Get-ChildItem -Recurse -Directory -Name
         $folderStructure | ForEach-Object { #This is so that it will not recurse on itself if it somehow copies into the source folder
                 New-Item -Path "$($LocRep)$($i)\$($_)" -ItemType Directory -Force >$null
@@ -178,7 +177,7 @@ for ($i=0; $i -le 100; $i++)
             }
     }
 
-    Set-Location "$($LocRep)$($i)"
+    Set-Location "$($LocRep)$($i)" ##############
 
     if ((Test-Path 'in-progress')) {
         Write-Host "Folder $(Get-Location) was skipped because another script runs there (in-progress folder exists)"
@@ -194,16 +193,16 @@ for ($i=0; $i -le 100; $i++)
 #START auto-editor IN CLOSED FOLDER
 
 New-Item 'in-progress' -ItemType Directory >$null
-Write-Host "We will new start auto-editor in location $(Get-Location)." -ForegroundColor Green
+Write-Host "We will now start auto-editor in location $(Get-Location)." -ForegroundColor Green
 
 $parameters = " --silent_speed $($fastSpeed) --video_speed $($normalSpeed) $($parameters)"
 if ($outPath -ne '') {
     $parameters =  " --output_file '$($outPath)' $($parameters)"
 }
 
-Invoke-Expression "python .\auto-editor.py $path $($parameters)"
+Invoke-Expression "python .\auto-editor.py $($path) $($parameters)"
 
 Write-Host "auto-editor finished. " -ForegroundColor Green -NoNewline
-Write-Host "$(Get-Location) is open for use again. Your video is there unless you specified an out_path."
 Remove-Item 'in-progress'
-Set-Location $oldLocation
+Write-Host "$(Get-Location) is open for use again. Your video is there unless you specified an out_path."
+Set-Location $oldLocation ############
