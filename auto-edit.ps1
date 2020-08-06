@@ -80,6 +80,7 @@ while ($true) {
     }
     Write-Host "You have to install python (version 3) (including the packet manager pip (pip3)) first" -ForegroundColor DarkYellow
     Write-Host "Running 'python3' should redirect you to the Microsoft Store from where you can install it."
+    Write-Host "You can always leave by (Ctrl-Break) or (Ctrl-C)" -ForegroundColor Red
     Read-Host
 }
 
